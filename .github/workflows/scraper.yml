@@ -11,7 +11,8 @@ on:
   # Run on push to main branch (for testing)
   push:
     branches: [ main ]
-
+permissions:
+  contents: write
 jobs:
   scrape-tenders:
     runs-on: ubuntu-latest
