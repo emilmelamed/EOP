@@ -1,0 +1,8 @@
+tender-scraper/
+├── .github/
+│   └── workflows/
+│       └── scraper.yml          # The workflow file
+├── scraper.py                   # Your Python scraper
+├── requirements.txt             # Python dependencies
+├── data/                        # Will store results (auto-created)
+└── README.md
