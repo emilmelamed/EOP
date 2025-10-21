@@ -216,7 +216,10 @@ async def run(playwright: Playwright):
     
     return all_tenders
 
+async def main():
+    async with async_playwright() as playwright:
+        tenders = await run(playwright)
+        print(f"Scraping completed. Total records: {len(tenders)}")
 
-async with async_playwright() as playwright:
-    tenders = await run(playwright)
-    print(f"Scraping completed. Total records: {len(tenders)}")
+if __name__ == "__main__":
+    asyncio.run(main())
