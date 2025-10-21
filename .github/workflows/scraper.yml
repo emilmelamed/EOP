@@ -1,8 +1,98 @@
-tender-scraper/
-├── .github/
-│   └── workflows/
-│       └── scraper.yml          # The workflow file
-├── scraper.py                   # Your Python scraper
-├── requirements.txt             # Python dependencies
-├── data/                        # Will store results (auto-created)
-└── README.md
+name: Tender Scraper
+
+on:
+  # Run daily at 9:00 AM UTC (11:00 AM Sofia time)
+  schedule:
+    - cron: '0 9 * * *'
+  
+  # Allow manual trigger from GitHub UI
+  workflow_dispatch:
+  
+  # Run on push to main branch (for testing)
+  push:
+    branches: [ main ]
+
+jobs:
+  scrape-tenders:
+    runs-on: ubuntu-latest
+    
+    steps:
+      # Step 1: Checkout the repository
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      # Step 2: Set up Python
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      
+      # Step 3: Install dependencies
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install playwright rich
+          playwright install chromium
+          playwright install-deps chromium
+      
+      # Step 4: Run the scraper
+      - name: Run tender scraper
+        run: |
+          python scraper.py
+      
+      # Step 5: Upload JSON results as artifact
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tenders-data-${{ github.run_number }}
+          path: tenders_data.json
+          retention-days: 30
+      
+      # Step 6: Commit and push results to repository (optional)
+      - name: Commit results to repository
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          
+          # Create data directory if it doesn't exist
+          mkdir -p data
+          
+          # Copy with timestamp
+          TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
+          cp tenders_data.json data/tenders_${TIMESTAMP}.json
+          
+          # Also keep latest version
+          cp tenders_data.json data/tenders_latest.json
+          
+          # Commit if there are changes
+          git add data/
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Update tenders data - $(date +'%Y-%m-%d %H:%M:%S')" && git push)
+      
+      # Step 7: Create summary
+      - name: Create job summary
+        if: always()
+        run: |
+          echo "## Tender Scraper Results 📊" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Run Date:** $(date +'%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ -f tenders_data.json ]; then
+            TOTAL=$(jq '.metadata.total_tenders' tenders_data.json)
+            SKIPPED=$(jq '.metadata.skipped_old_tenders' tenders_data.json)
+            PAGES=$(jq '.metadata.pages_processed' tenders_data.json)
+            
+            echo "### Summary" >> $GITHUB_STEP_SUMMARY
+            echo "- ✅ **Total Tenders Extracted:** $TOTAL" >> $GITHUB_STEP_SUMMARY
+            echo "- ⊗ **Old Tenders Skipped:** $SKIPPED" >> $GITHUB_STEP_SUMMARY
+            echo "- 📄 **Pages Processed:** $PAGES" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### Latest Tenders" >> $GITHUB_STEP_SUMMARY
+            echo '```json' >> $GITHUB_STEP_SUMMARY
+            jq '.tenders[0:3] | .[] | {order_number, tender_objective, submission_deadline: .submission_deadline.formatted}' tenders_data.json >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Error:** tenders_data.json not found" >> $GITHUB_STEP_SUMMARY
+          fi
