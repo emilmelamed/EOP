@@ -33,6 +33,7 @@ async def run(playwright: Playwright):
     browser = await chrome.launch(headless=True)
     page = await browser.new_page()
     await page.goto(start_url, timeout=60000)
+    await page.wait_for_load_state("load")
 
     print(f"Extracting ....")  
     
