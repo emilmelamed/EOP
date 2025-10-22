@@ -3,7 +3,7 @@ name: Tender Scraper
 on:
   # Run daily at 9:00 AM UTC (11:00 AM Sofia time)
   schedule:
-    - cron: '59 21 * * *'
+    - cron: '59 07 * * *'
   
   # Allow manual trigger from GitHub UI
   workflow_dispatch:
