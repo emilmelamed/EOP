@@ -32,7 +32,7 @@ async def run(playwright: Playwright):
     chrome = playwright.chromium
     browser = await chrome.launch(headless=True)
     page = await browser.new_page()
-    await page.goto(start_url, timeout=40000)
+    await page.goto(start_url, timeout=60000)
 
     print(f"Extracting ....")  
     
