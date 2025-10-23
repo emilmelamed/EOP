@@ -59,7 +59,7 @@ async def run(playwright: Playwright):
         emo_hrefs = []
         for link in emo_links:
             emo_hrefs.append(await link.get_attribute("href"))
-
+            print({emo_hrefs[-1]})
         if emo_hrefs:
             print(f"Found {len(emo_hrefs)} tenders on page {page_number}")
 
