@@ -4,7 +4,7 @@ import asyncio
 import json
 from datetime import datetime
 from pathlib import Path
-
+import time
 # Define a mapping for Bulgarian month abbreviations
 bg_months = {
      "яну": "Jan", "фев": "Feb", "март": "Mar", "апр": "Apr",
@@ -32,13 +32,14 @@ async def run(playwright: Playwright):
     chrome = playwright.chromium
     browser = await chrome.launch(headless=True)
     page = await browser.new_page()
+    time.sleep(60)
     await page.goto(start_url, timeout=60000)
     await page.wait_for_load_state("load")
     title = await page.title()
     print(f"Print the title of the page is: {title}")
 
     print(f"Extracting ....")  
-    
+    time.sleep(60)
     # List to store all extracted tenders
     all_tenders = []
     skipped_old_tenders = 0
