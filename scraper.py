@@ -62,7 +62,8 @@ async def run(playwright: Playwright):
             print({emo_hrefs[-1]})
         if emo_hrefs:
             print(f"Found {len(emo_hrefs)} tenders on page {page_number}")
-
+        else:
+             print(f"There are 0 scraped hrefs!!!Problem!!!")
         # Process only first 2 links (change as needed)
         for idx, link in enumerate(emo_hrefs, start=1):
             print(f"\n--- Processing tender {idx}/{len(emo_hrefs)} ---")
