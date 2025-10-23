@@ -34,7 +34,7 @@ async def run(playwright: Playwright):
     page = await browser.new_page()
     await page.goto(start_url, timeout=60000)
     await page.wait_for_load_state("load")
-    await page.title()
+    title = await page.title()
     print(f"Print the title of the page is: {title}")
 
     print(f"Extracting ....")  
