@@ -191,7 +191,7 @@ def quick_it_search(json_file="tenders_data.json"):
         return []
 
 
-async def run(playwright: Playwright):
+async def run_scraper(playwright: Playwright):
     start_url = "https://app.eop.bg/today"
     print(f"Navigating to {start_url}")
     
