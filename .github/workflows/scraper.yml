@@ -1,5 +1,4 @@
-name: Tender Scraper
-
+name: Tender Scraper with AI Analysis
 on:
   # Run daily at 9:00 AM UTC (11:00 AM Sofia time)
   schedule:
@@ -11,8 +10,10 @@ on:
   # Run on push to main branch (for testing)
  # push:
  #   branches: [ main ]
+
 permissions:
   contents: write
+
 jobs:
   scrape-tenders:
     runs-on: ubuntu-latest
@@ -33,17 +34,19 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install playwright rich google-generativeai
+          pip install playwright rich google-generativeai pandas
           playwright install chromium
           playwright install-deps chromium
       
-      # Step 4: Run the scraper
-      - name: Run tender scraper
+      # Step 4: Run the scraper with AI analysis
+      - name: Run tender scraper with Gemini AI
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
           python scraper.py
       
       # Step 5: Upload JSON results as artifact
-      - name: Upload results
+      - name: Upload tender data
         uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -51,14 +54,23 @@ jobs:
           path: tenders_data.json
           retention-days: 30
       
-      # Step 6: Commit and push results to repository (optional)
+      # Step 6: Upload AI analysis as artifact
+      - name: Upload AI analysis
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: it-analysis-${{ github.run_number }}
+          path: it_tender_analysis_*.txt
+          retention-days: 30
+      
+      # Step 7: Commit and push results to repository
       - name: Commit results to repository
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           
           # Create data directory if it doesn't exist
-          mkdir -p data
+          mkdir -p data/analyses
           
           # Copy with timestamp
           TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
@@ -67,15 +79,21 @@ jobs:
           # Also keep latest version
           cp tenders_data.json data/tenders_latest.json
           
+          # Copy AI analysis if it exists
+          if ls it_tender_analysis_*.txt 1> /dev/null 2>&1; then
+            cp it_tender_analysis_*.txt data/analyses/analysis_${TIMESTAMP}.txt
+            cp it_tender_analysis_*.txt data/analyses/analysis_latest.txt
+          fi
+          
           # Commit if there are changes
           git add data/
-          git diff --quiet && git diff --staged --quiet || (git commit -m "Update tenders data - $(date +'%Y-%m-%d %H:%M:%S')" && git push)
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Update tenders data and AI analysis - $(date +'%Y-%m-%d %H:%M:%S')" && git push)
       
-      # Step 7: Create summary
+      # Step 8: Create detailed summary with IT analysis
       - name: Create job summary
         if: always()
         run: |
-          echo "## Tender Scraper Results 📊" >> $GITHUB_STEP_SUMMARY
+          echo "## 🤖 Tender Scraper Results with AI Analysis" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Run Date:** $(date +'%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -85,15 +103,45 @@ jobs:
             SKIPPED=$(jq '.metadata.skipped_old_tenders' tenders_data.json)
             PAGES=$(jq '.metadata.pages_processed' tenders_data.json)
             
-            echo "### Summary" >> $GITHUB_STEP_SUMMARY
+            echo "### 📊 Scraping Summary" >> $GITHUB_STEP_SUMMARY
             echo "- ✅ **Total Tenders Extracted:** $TOTAL" >> $GITHUB_STEP_SUMMARY
             echo "- ⊗ **Old Tenders Skipped:** $SKIPPED" >> $GITHUB_STEP_SUMMARY
             echo "- 📄 **Pages Processed:** $PAGES" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
-            echo "### Latest Tenders" >> $GITHUB_STEP_SUMMARY
+            
+            # Count IT-related tenders (simple keyword search)
+            IT_COUNT=$(jq '[.tenders[] | select(.tender_objective + .documentation | ascii_downcase | test("информационн|софтуер|хардуер|компютър|сървър|мрежа|система|it|софтуерн"))] | length' tenders_data.json)
+            echo "- 💻 **IT-Related Tenders Found:** $IT_COUNT" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            
+            echo "### 📋 Latest Tenders (First 3)" >> $GITHUB_STEP_SUMMARY
             echo '```json' >> $GITHUB_STEP_SUMMARY
-            jq '.tenders[0:3] | .[] | {order_number, tender_objective, submission_deadline: .submission_deadline.formatted}' tenders_data.json >> $GITHUB_STEP_SUMMARY
+            jq '.tenders[0:3] | .[] | {order_number, tender_objective, estimated_amount, submission_deadline: .submission_deadline.formatted}' tenders_data.json >> $GITHUB_STEP_SUMMARY
             echo '```' >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
           else
             echo "❌ **Error:** tenders_data.json not found" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
           fi
+          
+          # Add AI analysis summary if available
+          if ls it_tender_analysis_*.txt 1> /dev/null 2>&1; then
+            echo "### 🤖 AI Analysis Highlights" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**AI Analysis completed successfully!**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Preview (first 50 lines):" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            head -50 it_tender_analysis_*.txt >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "📎 Full analysis available in artifacts" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "### ⚠️ AI Analysis" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "AI analysis file not found. Check logs for errors." >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "---" >> $GITHUB_STEP_SUMMARY
+          echo "📥 Download artifacts for complete data and analysis" >> $GITHUB_STEP_SUMMARY
