@@ -5,6 +5,9 @@ import json
 from datetime import datetime
 from pathlib import Path
 import time
+import google.generativeai as genai
+from google.colab import userdata # Import userdata
+
 # Define a mapping for Bulgarian month abbreviations
 bg_months = {
      "яну": "Jan", "фев": "Feb", "март": "Mar", "апр": "Apr",
@@ -24,6 +27,169 @@ def parse_bulgarian_date(date_string):
             break
     
     return datetime.strptime(cleaned_str, "%d %b %Y %H:%M")
+
+def analyze_it_tenders_with_gemini(json_file="tenders_data.json", api_key=None):
+    """
+    Analyze tender data focusing on IT-related opportunities using Gemini AI.
+
+    Args:
+        json_file: Path to the JSON file containing tender data
+        api_key: Google API key for Gemini (or set GOOGLE_API_KEY env variable)
+    """
+
+    try:
+        # Configure Gemini
+        if api_key:
+          genai.configure(api_key=api_key)
+        else:
+          print("Warning: No API key provided for Gemini analysis.")
+          return None
+
+        model = genai.GenerativeModel('gemini-2.5-flash')
+
+        # Load the tender data
+        with open(json_file, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+
+        # Extract tenders and metadata
+        tenders = data.get('tenders', [])
+        metadata = data.get('metadata', {})
+
+        print(f"\n{'='*80}")
+        print("GEMINI AI ANALYSIS - IT TENDERS")
+        print(f"{'='*80}")
+        print(f"Loaded {len(tenders)} tenders from {json_file}")
+        print(f"Starting IT-focused analysis...\n")
+
+        # Prepare the data for Gemini
+        tenders_json = json.dumps(tenders, ensure_ascii=False, indent=2)
+
+        # Create analysis prompt focused on IT tenders
+        prompt = f"""You are analyzing Bulgarian government tender data from eop.bg. Your task is to identify and analyze tenders related to Information Technologies.
+
+DATASET METADATA:
+{json.dumps(metadata, ensure_ascii=False, indent=2)}
+
+COMPLETE TENDER DATA:
+{tenders_json}
+
+INSTRUCTIONS:
+1. **Search and Filter**: Identify ALL tenders related to Information Technologies. Look for keywords in Bulgarian and English such as:
+   - IT, ИТ, информационни технологии, софтуер, software, hardware, хардуер
+   - Системи, systems, мрежи, networks, сървъри, servers
+   - Разработка, development, внедряване, implementation
+   - Кибер, cyber, сигурност, security
+   - Cloud, облак, дата центрове, data centers
+   - Приложения, applications, уеб, web
+   - Бази данни, databases, интеграция, integration
+
+2. **Summarize IT Tenders**: For each IT-related tender found, provide:
+   - Order number and buyer
+   - Brief description of what IT solution/service is needed
+   - Estimated amount
+   - Submission deadline
+   - Link to tender
+
+3. **Detailed Analysis**: Provide:
+   - Total number of IT tenders vs total tenders
+   - Total estimated value of IT tenders
+   - Most common types of IT procurement (software, hardware, services, etc.)
+   - Highest value IT opportunities
+   - Most urgent IT tenders (deadline within 7 days)
+   - Key buyers procuring IT solutions
+
+4. **Strategic Insights**:
+   - Which IT tenders are most attractive and why
+   - Trends in IT procurement (types of solutions being sought)
+   - Recommended tenders to prioritize for bidding
+
+5. **Summary Table**: Create a formatted table of all IT tenders with:
+   Order Number | Buyer | IT Category | Amount | Deadline | Days Left
+
+Please provide your analysis in Bulgarian and English where appropriate."""
+
+        print("Sending data to Gemini AI for IT tender analysis...")
+
+        # Call Gemini API
+        response = model.generate_content(prompt)
+
+        # Get the analysis
+        analysis = response.text
+
+        # Print the analysis
+        print("\n" + "="*80)
+        print("ANALYSIS RESULTS")
+        print("="*80)
+        print(analysis)
+        print("="*80)
+
+        # Save analysis to file
+        output_file = f"it_tender_analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
+        with open(output_file, 'w', encoding='utf-8') as f:
+            f.write("IT TENDER DATA ANALYSIS (Gemini AI)\n")
+            f.write("="*80 + "\n\n")
+            f.write(f"Analysis Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+            f.write(f"Source File: {json_file}\n")
+            f.write(f"Total Tenders Analyzed: {len(tenders)}\n\n")
+            f.write("="*80 + "\n\n")
+            f.write(analysis)
+
+        print(f"\n✓ IT tender analysis saved to: {output_file}")
+
+        return analysis
+
+    except Exception as e:
+        print(f"\n✗ Error during Gemini AI analysis: {e}")
+        print("Skipping AI analysis, but scraped data is still saved.")
+        return None
+def quick_it_search(json_file="tenders_data.json"):
+    """
+    Quick local search for IT-related tenders without API call.
+    """
+    try:
+        with open(json_file, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+
+        tenders = data.get('tenders', [])
+
+        # IT-related keywords in Bulgarian
+        it_keywords = [
+            'информационн', 'софтуер', 'хардуер', 'компютър', 'сървър',
+            'мрежа', 'система', 'програм', 'данни', 'интернет',
+            'уеб', 'сайт', 'облак', 'сигурност', 'кибер',
+            'it', 'software', 'hardware', 'server', 'cloud'
+        ]
+
+        it_tenders = []
+
+        for tender in tenders:
+            tender_text = (
+                tender.get('tender_objective', '').lower() + ' ' +
+                tender.get('documentation', '').lower() + ' ' +
+                tender.get('buyer', '').lower()
+            )
+
+            if any(keyword in tender_text for keyword in it_keywords):
+                it_tenders.append(tender)
+
+        print(f"\n{'='*80}")
+        print(f"QUICK IT TENDER SEARCH RESULTS")
+        print(f"{'='*80}")
+        print(f"Found {len(it_tenders)} IT-related tenders out of {len(tenders)} total\n")
+
+        for idx, tender in enumerate(it_tenders, 1):
+            print(f"{idx}. Order: {tender.get('order_number')}")
+            print(f"   Buyer: {tender.get('buyer', '')[:60]}...")
+            print(f"   Objective: {tender.get('tender_objective', '')[:80]}...")
+            print(f"   Amount: {tender.get('estimated_amount')}")
+            print(f"   Deadline: {tender.get('submission_deadline', {}).get('formatted')}")
+            print(f"   URL: {tender.get('url')}\n")
+
+        return it_tenders
+    except Exception as e:
+        print(f"Error during quick IT search: {e}")
+        return []
+
 
 async def run(playwright: Playwright):
     start_url = "https://app.eop.bg/today"
@@ -172,7 +338,11 @@ async def run(playwright: Playwright):
             
             finally:
                 await p.close()
-        
+
+        # Check if we broke out of the inner loop due to old tender
+        if found_old_tender:
+            break # Break from the while loop as well
+ 
         # Save after each page (incremental backup)
         output_file = Path("tenders_data.json")
         with open(output_file, "w", encoding="utf-8") as f:
@@ -222,9 +392,57 @@ async def run(playwright: Playwright):
     return all_tenders
 
 async def main():
-    async with async_playwright() as playwright:
-        tenders = await run(playwright)
-        print(f"Scraping completed. Total records: {len(tenders)}")
+    """Main function to run scraper and analysis"""
+
+    # CONFIGURATION
+    # Get API key from https://makersuite.google.com/app/apikey and add to Colab secrets with name GOOGLE_API_KEY
+    GEMINI_API_KEY = 'AIzaSyCH1-zXgN8wPpCTvwVQUZ92vwUN5Aukshw'
+    RUN_QUICK_SEARCH = True  # Set to False to skip quick local search
+    RUN_AI_ANALYSIS = True   # Set to False to skip Gemini AI analysis
+
+    # Run the scraper
+    print("\n" + "="*80)
+    print("STARTING TENDER SCRAPER")
+    print("="*80 + "\n")
+
+    # Await the run_scraper function directly
+    tenders = await run_scraper(async_playwright())
+
+    print(f"\n✓ Scraping completed successfully!")
+    print(f"✓ Total records scraped: {len(tenders)}")
+
+    # Quick local IT search
+    if RUN_QUICK_SEARCH:
+        print("\n" + "="*80)
+        print("RUNNING QUICK LOCAL IT SEARCH")
+        print("="*80)
+        it_tenders = quick_it_search("tenders_data.json")
+
+    # Gemini AI Analysis
+    if RUN_AI_ANALYSIS:
+        if not GEMINI_API_KEY:
+            print("\n" + "="*80)
+            print("⚠ WARNING: No Gemini API key configured")
+            print("="*80)
+            print("To enable AI analysis:")
+            print("1. Get API key from: https://makersuite.google.com/app/apikey")
+            print("2. Add it to Colab secrets with name GOOGLE_API_KEY")
+            print("="*80 + "\n")
+        else:
+            print("\n" + "="*80)
+            print("STARTING GEMINI AI ANALYSIS")
+            print("="*80)
+            analyze_it_tenders_with_gemini(
+                json_file="tenders_data.json",
+                api_key=GEMINI_API_KEY
+            )
+
+    print("\n" + "="*80)
+    print("ALL TASKS COMPLETED")
+    print("="*80)
+    print(f"✓ Scraped data: tenders_data.json")
+    print(f"✓ AI analysis: it_tender_analysis_*.txt")
+    print("="*80 + "\n")
 
 if __name__ == "__main__":
     asyncio.run(main())
