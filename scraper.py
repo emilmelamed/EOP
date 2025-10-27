@@ -6,7 +6,7 @@ from datetime import datetime
 from pathlib import Path
 import time
 import google.generativeai as genai
-from google.colab import userdata # Import userdata
+#from google.colab import userdata # Import userdata
 
 # Define a mapping for Bulgarian month abbreviations
 bg_months = {
