@@ -6,6 +6,7 @@ from datetime import datetime
 from pathlib import Path
 import time
 import google.generativeai as genai
+import os
 #from google.colab import userdata # Import userdata
 
 # Define a mapping for Bulgarian month abbreviations
@@ -397,10 +398,10 @@ async def main():
     """Main function to run scraper and analysis"""
 
     # CONFIGURATION
-    # Get API key from https://makersuite.google.com/app/apikey and add to Colab secrets with name GOOGLE_API_KEY
-    GEMINI_API_KEY = 'AIzaSyCH1-zXgN8wPpCTvwVQUZ92vwUN5Aukshw'
+    
+    GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
     RUN_QUICK_SEARCH = True  # Set to False to skip quick local search
-    RUN_AI_ANALYSIS = True   # Set to False to skip Gemini AI analysis
+    RUN_AI_ANALYSIS = True  if GEMINI_API_KEY else False # Set to False to skip Gemini AI analysis
 
     # Run the scraper
     print("\n" + "="*80)
