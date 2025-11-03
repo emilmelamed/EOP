@@ -146,7 +146,7 @@ Please provide your analysis in Bulgarian and English where appropriate."""
 
         print(f"\n✓ IT tender analysis saved to: {output_file}")
         notify_analysis_complete(
-            workflow_url="https://hooks.slack.com/triggers/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",
+            workflow_url=os.getenv('WEBHOOK_URL'),
             repo_url=f"https://github.com/emilmelamed/EOP/blob/main/data/analyses/{output_file}"
         )
      
