@@ -7,6 +7,7 @@ from pathlib import Path
 import time
 import google.generativeai as genai
 import os
+import requests
 #from google.colab import userdata # Import userdata
 
 # Define a mapping for Bulgarian month abbreviations
@@ -15,6 +16,13 @@ bg_months = {
      "май": "May", "юни": "Jun", "юли": "Jul", "авг": "Aug",
      "сеп": "Sep", "окт": "Oct", "ное": "Nov", "дек": "Dec"
  }
+
+def notify_analysis_complete(workflow_url, repo_url):
+  payload = {
+      "repo_url":repo_url,
+      "Status":"Analysis Complete",
+
+  }
 
 def parse_bulgarian_date(date_string):
     """Parse Bulgarian date string and return datetime object."""
@@ -137,7 +145,11 @@ Please provide your analysis in Bulgarian and English where appropriate."""
             f.write(analysis)
 
         print(f"\n✓ IT tender analysis saved to: {output_file}")
-
+        notify_analysis_complete(
+            workflow_url="https://hooks.slack.com/triggers/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",
+            repo_url=f"https://github.com/emilmelamed/EOP/blob/main/data/analyses/{output_file}"
+        )
+     
         return analysis
 
     except Exception as e:
