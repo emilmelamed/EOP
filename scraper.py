@@ -23,6 +23,8 @@ def notify_analysis_complete(workflow_url, repo_url):
       "Status":"Analysis Complete",
 
   }
+  response = requests.post(workflow_url, json=payload)
+  return response.status_code == 200
 
 def parse_bulgarian_date(date_string):
     """Parse Bulgarian date string and return datetime object."""
@@ -246,7 +248,7 @@ async def run_scraper(playwright: Playwright):
                 print(f"Found {len(emo_hrefs)} tenders on page {page_number}")
 
             # Process all links on the page
-            for idx, link in enumerate(emo_hrefs, start=1):
+            for idx, link in enumerate(emo_hrefs[:1], start=1):
                 print(f"\n--- Processing tender {idx}/{len(emo_hrefs)} ---")
 
                 p = await browser.new_page(base_url="https://app.eop.bg")
