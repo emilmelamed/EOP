@@ -58,7 +58,7 @@ def analyze_it_tenders_with_gemini(json_file="tenders_data.json", api_key=None):
         json_file: Path to the JSON file containing tender data
         api_key: Google API key for Gemini (or set GOOGLE_API_KEY env variable)
     """
-    workflow_url=os.getenv('WEBHOOK_URL')
+    
     try:
         # Configure Gemini
         if api_key:
@@ -158,7 +158,7 @@ Please provide your analysis in Bulgarian and English where appropriate."""
 
         print(f"\n✓ IT tender analysis saved to: {output_file}")
         notify_analysis_complete(
-            workflow_url,
+            workflow_url="https://hooks.slack.com/triggers/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",
             repo_url=f"https://github.com/emilmelamed/EOP/blob/main/data/analyses/analysis_latest.txt"
         )
         print("!!!!!!Notification sent to Slack!!!!!")
