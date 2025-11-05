@@ -21,10 +21,20 @@ def notify_analysis_complete(workflow_url, repo_url):
   payload = {
       "repo_url":repo_url,
       "Status":"Analysis Complete",
-
   }
-  response = requests.post(workflow_url, json=payload)
-  return response.status_code == 200
+   
+  try:
+       response = requests.post(workflow_url, json=payload, timeout=15)
+       if response.status_code==200
+            print("✓ Workflow triggered successfully!")
+            return True
+       else:
+            print(f"✗ Failed: {response.status_code} - {response.text}")
+            return False
+  except requests.exception.RequestException as e:
+       print(f"x Error: {e}")
+       return False
+     
 
 def parse_bulgarian_date(date_string):
     """Parse Bulgarian date string and return datetime object."""
@@ -151,7 +161,7 @@ Please provide your analysis in Bulgarian and English where appropriate."""
             workflow_url=os.getenv('WEBHOOK_URL'),
             repo_url=f"https://github.com/emilmelamed/EOP/blob/main/data/analyses/{output_file}"
         )
-     
+        print("!!!!!!Notification sent to Slack!!!!!")
         return analysis
 
     except Exception as e:
