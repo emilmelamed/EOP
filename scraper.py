@@ -25,7 +25,7 @@ def notify_analysis_complete(workflow_url, repo_url):
    
   try:
        response = requests.post(workflow_url, json=payload, timeout=15)
-       if response.status_code==200
+       if response.status_code==200:
             print("✓ Workflow triggered successfully!")
             return True
        else:
