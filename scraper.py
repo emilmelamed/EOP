@@ -9,7 +9,8 @@ import google.generativeai as genai
 import os
 import requests
 #from google.colab import userdata # Import userdata
-
+webhook_url = os.getenv('WEBHOOK_URL')
+print(f"Webhook string is: {webhook_url}")
 # Define a mapping for Bulgarian month abbreviations
 bg_months = {
      "яну": "Jan", "фев": "Feb", "март": "Mar", "апр": "Apr",
