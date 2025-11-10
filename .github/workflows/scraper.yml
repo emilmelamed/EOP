@@ -42,6 +42,7 @@ jobs:
       - name: Run tender scraper with Gemini AI
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
         run: |
           python scraper.py
       
