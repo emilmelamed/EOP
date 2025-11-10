@@ -117,18 +117,16 @@ INSTRUCTIONS:
    - Total estimated value of IT tenders
    - Most common types of IT procurement (software, hardware, services, etc.)
    - Highest value IT opportunities
-   - Most urgent IT tenders (deadline within 7 days)
    - Key buyers procuring IT solutions
 
 4. **Strategic Insights**:
    - Which IT tenders are most attractive and why
-   - Trends in IT procurement (types of solutions being sought)
    - Recommended tenders to prioritize for bidding
 
 5. **Summary Table**: Create a formatted table of all IT tenders with:
    Order Number | Buyer | IT Category | Amount | Deadline | Days Left
 
-Please provide your analysis in Bulgarian and English where appropriate."""
+Please provide your analysis in Bulgarian where appropriate."""
 
         print("Sending data to Gemini AI for IT tender analysis...")
 
