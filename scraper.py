@@ -9,8 +9,7 @@ import google.generativeai as genai
 import os
 import requests
 #from google.colab import userdata # Import userdata
-webhook_url = os.getenv('WEBHOOK_URL')
-print(f"Webhook string is: {webhook_url}")
+
 # Define a mapping for Bulgarian month abbreviations
 bg_months = {
      "яну": "Jan", "фев": "Feb", "март": "Mar", "апр": "Apr",
@@ -159,7 +158,7 @@ Please provide your analysis in Bulgarian and English where appropriate."""
 
         print(f"\n✓ IT tender analysis saved to: {output_file}")
         notify_analysis_complete(
-            workflow_url="https://hooks.slack.com/triggers/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",
+            workflow_url=os.getenv('WEBHOOK_URL'),
             repo_url=f"https://github.com/emilmelamed/EOP/blob/main/data/analyses/analysis_latest.txt"
         )
         print("!!!!!!Notification sent to Slack!!!!!")
@@ -259,7 +258,7 @@ async def run_scraper(playwright: Playwright):
                 print(f"Found {len(emo_hrefs)} tenders on page {page_number}")
 
             # Process all links on the page
-            for idx, link in enumerate(emo_hrefs, start=1):
+            for idx, link in enumerate(emo_hrefs[:1], start=1):
                 print(f"\n--- Processing tender {idx}/{len(emo_hrefs)} ---")
 
                 p = await browser.new_page(base_url="https://app.eop.bg")
