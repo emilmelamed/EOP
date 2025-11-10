@@ -258,7 +258,7 @@ async def run_scraper(playwright: Playwright):
                 print(f"Found {len(emo_hrefs)} tenders on page {page_number}")
 
             # Process all links on the page
-            for idx, link in enumerate(emo_hrefs[:1], start=1):
+            for idx, link in enumerate(emo_hrefs, start=1):
                 print(f"\n--- Processing tender {idx}/{len(emo_hrefs)} ---")
 
                 p = await browser.new_page(base_url="https://app.eop.bg")
