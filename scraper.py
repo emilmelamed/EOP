@@ -133,6 +133,10 @@ Please provide your analysis in Bulgarian where appropriate."""
         # Call Gemini API
         response = model.generate_content(prompt)
 
+        # Check returned status from Gemini API
+        finish_reason = response.candidates[0].finish_reason
+        print(f"Finish reason: {finish_reason.name}")
+
         # Get the analysis
         analysis = response.text
 
