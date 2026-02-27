@@ -12,7 +12,7 @@ import requests
 
 # Define a mapping for Bulgarian month abbreviations
 bg_months = {
-     "яну": "Jan", "фев": "Feb", "март": "Mar", "апр": "Apr",
+     "яну": "Jan", "фев": "Feb", "мар": "Mar", "апр": "Apr",
      "май": "May", "юни": "Jun", "юли": "Jul", "авг": "Aug",
      "сеп": "Sep", "окт": "Oct", "ное": "Nov", "дек": "Dec"
  }
